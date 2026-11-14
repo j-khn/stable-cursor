@@ -21,6 +21,14 @@ class CursorCodecTests(unittest.TestCase):
         self.assertEqual(cursor.after, ("2026-03-01T10:00:00Z", 4812))
         self.assertEqual(cursor.snapshot, "high-water-9000")
 
+    def test_integer_snapshot_round_trip(self):
+        token = self.codec.encode(
+            scope="orders:tenant=7", after=[1000, 10], snapshot=9000, now=1000, ttl_seconds=120
+        )
+        cursor = self.codec.decode(token, scope="orders:tenant=7", now=1050)
+        self.assertEqual(cursor.snapshot, 9000)
+        self.assertIs(type(cursor.snapshot), int)
+
     def test_scope_tampering_and_expiry_are_rejected(self):
         token = self.codec.encode(scope="orders:tenant=7", after=[3, 9], now=100, ttl_seconds=10)
         with self.assertRaises(CursorError):
@@ -38,6 +46,8 @@ class CursorCodecTests(unittest.TestCase):
             self.codec.encode(scope="x", after=[float("nan")], now=1, ttl_seconds=5)
         with self.assertRaises(ValueError):
             self.codec.encode(scope="x", after=[1], now=1, ttl_seconds=0)
+        with self.assertRaises(ValueError):
+            self.codec.encode(scope="x", after=[1], snapshot=True, now=1, ttl_seconds=5)
 
 
 if __name__ == "__main__":

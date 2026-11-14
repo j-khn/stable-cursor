@@ -16,7 +16,7 @@ codec = CursorCodec(os.environ["CURSOR_SECRET"].encode())
 token = codec.encode(
     scope="orders:status=open:sort=created_desc",
     after=["2026-03-01T10:00:00Z", 4812],
-    snapshot="order-9000",
+    snapshot=9000,
     now=1_773_000_000,
     ttl_seconds=900,
 )
@@ -26,6 +26,7 @@ cursor = codec.decode(
     now=1_773_000_100,
 )
 print(cursor.after)  # timestamp plus a unique tie-breaker
+print(cursor.snapshot)  # integer high-water mark for later pages
 ~~~
 
 A matching query might use:
@@ -40,7 +41,7 @@ ORDER BY created_at DESC, id DESC
 LIMIT 50
 ~~~
 
-The unique ID breaks ties between equal timestamps. A high-water mark can keep later inserts out of a multi-page scan.
+The unique ID breaks ties between equal timestamps. A string or integer snapshot can carry a high-water mark that keeps later inserts out of a multi-page scan.
 
 ## Security and scope
 

@@ -19,7 +19,7 @@ class CursorError(ValueError):
 class Cursor:
     scope: str
     after: tuple[str | int | float | bool | None, ...]
-    snapshot: str | None
+    snapshot: str | int | None
     issued_at: int
     expires_at: int
 
@@ -37,13 +37,13 @@ class CursorCodec:
         after: Sequence[str | int | float | bool | None],
         now: int,
         ttl_seconds: int,
-        snapshot: str | None = None,
+        snapshot: str | int | None = None,
     ) -> str:
         if (
             not isinstance(scope, str)
             or not scope
             or not after
-            or (snapshot is not None and not isinstance(snapshot, str))
+            or (snapshot is not None and not isinstance(snapshot, str) and type(snapshot) is not int)
             or type(now) is not int
             or type(ttl_seconds) is not int
             or ttl_seconds < 1
@@ -106,8 +106,8 @@ class CursorCodec:
         except ValueError as error:
             raise CursorError(str(error)) from error
         snapshot = payload.get("snapshot")
-        if snapshot is not None and not isinstance(snapshot, str):
-            raise CursorError("cursor snapshot must be a string")
+        if snapshot is not None and not isinstance(snapshot, str) and type(snapshot) is not int:
+            raise CursorError("cursor snapshot must be a string or integer")
         return Cursor(scope, tuple(after), snapshot, issued_at, expires_at)
 
     @staticmethod
