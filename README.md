@@ -47,6 +47,8 @@ The unique ID breaks ties between equal timestamps. A string or integer snapshot
 
 Tokens are authenticated, not encrypted. Do not put secrets or personal data in them. The scope should include the resource, filters, ordering, and tenant identity. Use a strong random key and rotate it deliberately; rotation invalidates cursors signed with the old key unless your application temporarily accepts both versions.
 
+Encoded cursors are limited to 8,192 characters; encoding a larger position raises `ValueError`.
+
 ## Important limits
 
 Keyset pagination is an established technique, and many frameworks offer cursor helpers. This package focuses on the token boundary: HMAC integrity, expiry, and query-scope binding. A signed token cannot create a database snapshot. Updates to sort keys and deletions can still change later pages. Choose stable sort columns, include a unique tie-breaker, and define snapshot semantics for your database.

@@ -49,6 +49,12 @@ class CursorCodecTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.codec.encode(scope="x", after=[1], snapshot=True, now=1, ttl_seconds=5)
 
+    def test_encode_rejects_token_that_decode_would_reject_for_size(self):
+        with self.assertRaisesRegex(ValueError, "cursor is too large"):
+            self.codec.encode(
+                scope="orders", after=["x" * 7000], now=1000, ttl_seconds=30
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

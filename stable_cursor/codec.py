@@ -11,6 +11,9 @@ import re
 from collections.abc import Sequence
 
 
+_MAX_TOKEN_LENGTH = 8192
+
+
 class CursorError(ValueError):
     pass
 
@@ -65,12 +68,15 @@ class CursorCodec:
         signature = self._b64encode(
             hmac.new(self._secret, body.encode("ascii"), hashlib.sha256).digest()
         )
-        return body + "." + signature
+        token = body + "." + signature
+        if len(token) > _MAX_TOKEN_LENGTH:
+            raise ValueError("cursor is too large")
+        return token
 
     def decode(self, token: str, *, scope: str, now: int) -> Cursor:
         if not isinstance(token, str) or type(now) is not int:
             raise CursorError("cursor and integer current time are required")
-        if len(token) > 8192:
+        if len(token) > _MAX_TOKEN_LENGTH:
             raise CursorError("cursor is too large")
         parts = token.split(".")
         if len(parts) != 2 or any(not re.fullmatch(r"[A-Za-z0-9_-]+", part) for part in parts):
