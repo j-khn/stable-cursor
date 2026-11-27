@@ -45,6 +45,8 @@ class CursorCodec:
         if (
             not isinstance(scope, str)
             or not scope
+            or not isinstance(after, Sequence)
+            or isinstance(after, (str, bytes, bytearray))
             or not after
             or (snapshot is not None and not isinstance(snapshot, str) and type(snapshot) is not int)
             or type(now) is not int

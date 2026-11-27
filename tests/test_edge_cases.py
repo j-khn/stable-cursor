@@ -29,6 +29,14 @@ class CursorCodecTests(unittest.TestCase):
         self.assertEqual(cursor.snapshot, 9000)
         self.assertIs(type(cursor.snapshot), int)
 
+    def test_string_position_must_be_wrapped_as_one_sort_key(self):
+        with self.assertRaisesRegex(ValueError, "non-empty position"):
+            self.codec.encode(scope="orders", after="abc", now=1000, ttl_seconds=30)
+
+        token = self.codec.encode(scope="orders", after=["abc"], now=1000, ttl_seconds=30)
+        cursor = self.codec.decode(token, scope="orders", now=1001)
+        self.assertEqual(cursor.after, ("abc",))
+
     def test_scope_tampering_and_expiry_are_rejected(self):
         token = self.codec.encode(scope="orders:tenant=7", after=[3, 9], now=100, ttl_seconds=10)
         with self.assertRaises(CursorError):
